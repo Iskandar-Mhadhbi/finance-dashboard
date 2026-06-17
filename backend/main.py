@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 from app.core.config import settings
-from app.routers import auth
-from app.routers import auth, stocks
-from app.routers import auth, stocks, watchlist
+from app.routers.api import router
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -16,9 +14,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/api")
-app.include_router(stocks.router, prefix="/api")
-app.include_router(watchlist.router, prefix="/api")
+app.include_router(router)
 
 
 @app.get("/")

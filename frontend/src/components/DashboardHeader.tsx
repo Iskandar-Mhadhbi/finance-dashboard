@@ -4,7 +4,7 @@ export function DashboardHeader() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="bg-white border-b border-slate-200 px-8 py-8">
+    <header className="bg-white border-b border-slate-200 px-8 py-4">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
         <h1 className="text-xl font-bold text-blue-600">
           Finance Dashboard

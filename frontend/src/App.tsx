@@ -3,6 +3,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { StockDetail } from './pages/StockDetail';
 
 
 function App() {
@@ -18,7 +19,15 @@ function App() {
             <Dashboard />
           </ProtectedRoute>
         }
-      />
+      /> 
+      <Route
+          path="/stocks/:symbol"
+          element={
+            <ProtectedRoute>
+              <StockDetail />
+            </ProtectedRoute>
+          }
+        />
     </Routes>
   );
 }

@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     # AI
     groq_api_key: str
+    marketaux_api_key: str
 
 
-settings = Settings()
+settings = Settings() # type: ignore

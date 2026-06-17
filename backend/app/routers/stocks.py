@@ -4,7 +4,7 @@ from app.models.user import User
 from app.schemas.stock import StockQuote, StockHistory
 from app.services.stock_service import get_stock_quote, get_stock_history
 
-router = APIRouter(prefix="/stocks", tags=["stocks"])
+router = APIRouter(prefix="/api/stocks", tags=["stocks"])
 
 
 @router.get("/{symbol}/quote", response_model=StockQuote)

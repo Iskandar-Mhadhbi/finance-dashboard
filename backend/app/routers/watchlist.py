@@ -12,7 +12,7 @@ from app.services.watchlist_service import (
 from uuid import UUID
 
 
-router = APIRouter(prefix="/watchlist", tags=["watchlist"])
+router = APIRouter(prefix="/api/watchlist", tags=["watchlist"])
 
 
 @router.get("", response_model=list[WatchlistItemResponse])
