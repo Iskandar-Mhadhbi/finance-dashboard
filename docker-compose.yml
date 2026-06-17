@@ -1,6 +1,7 @@
 services:
   postgres:
     image: pgvector/pgvector:pg16
+    container_name: finance-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: finance_dashboard

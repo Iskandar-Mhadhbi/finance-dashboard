@@ -25,7 +25,7 @@ export const getQuote = async (symbol: string) => {
   return res.data;
 };
 
-export const getHistory = async (symbol: string, period: string = '1mo') => {
+export const getHistoricalData = async (symbol: string, period: string = '1mo') => {
   const res = await api.get<StockHistory>(`/stocks/${symbol}/history`, {
     params: { period },
   });
