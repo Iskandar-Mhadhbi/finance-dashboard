@@ -35,8 +35,7 @@ async def test_get_stock_quote_invalid_symbol():
 
 @pytest.mark.asyncio
 async def test_get_stock_history_success():
-    import pandas as pd
-    import numpy as np
+    import pandas as pd 
 
     dates = pd.date_range("2024-01-01", periods=3)
     mock_hist = pd.DataFrame({"Close": [100.0, 101.0, 102.0]}, index=dates)

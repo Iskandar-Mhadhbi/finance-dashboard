@@ -48,7 +48,7 @@ async def test_add_to_watchlist_success(mock_db, user_id):
 
     with patch("yfinance.Ticker") as mock_ticker:
         mock_ticker.return_value.fast_info = mock_fast_info
-        result = await add_to_watchlist(mock_db, user_id, data)
+        await add_to_watchlist(mock_db, user_id, data)
 
     mock_db.add.assert_called_once()
     mock_db.commit.assert_called_once()
