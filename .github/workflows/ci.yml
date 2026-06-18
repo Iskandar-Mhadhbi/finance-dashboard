@@ -10,9 +10,9 @@ env:
   FRONTEND_URL_PROD: http://localhost
 jobs:
   test:
-    name: Tests
+    name: Tests and cov + lint 
     runs-on: ubuntu-latest
-
+ 
     services:
       postgres:
         image: pgvector/pgvector:pg16
