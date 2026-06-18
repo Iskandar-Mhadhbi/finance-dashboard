@@ -7,7 +7,7 @@ on:
     branches: [main]
 env:
   REPO_OWNER: iskandar-mhadhbi
-
+  FRONTEND_URL_PROD: http://localhost
 jobs:
   test:
     name: Tests

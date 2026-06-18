@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     # App
     app_env: str = "development"
-    frontend_url: str 
+    frontend_url_prod: str = "http://localhost"
     frontend_url_prod: str  
 
     # AI
