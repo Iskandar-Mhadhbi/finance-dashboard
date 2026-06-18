@@ -5,6 +5,8 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+env:
+  REPO_OWNER: iskandar-mhadhbi
 
 jobs:
   test:
@@ -75,7 +77,7 @@ jobs:
         with:
           context: ./backend
           push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository_owner }}/finance-dashboard/backend:latest
+          tags: ghcr.io/${{ env.REPO_OWNER }}/finance-dashboard/backend:latest
 
   build-frontend:
     name: Build Frontend
@@ -98,6 +100,6 @@ jobs:
         with:
           context: ./frontend
           push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/${{ github.repository_owner }}/finance-dashboard/frontend:latest
+          tags: ghcr.io/${{ env.REPO_OWNER }}/finance-dashboard/frontend:latest
           build-args: |
             VITE_API_URL=http://localhost:8000/api
