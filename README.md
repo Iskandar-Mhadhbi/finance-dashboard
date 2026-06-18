@@ -61,7 +61,10 @@ An AI-powered financial intelligence platform. Track stocks, monitor live prices
 ┌─────────────────┐   HTTP/WS     ┌─────────────────┐     SQLAlchemy    ┌──────────────────┐
 │  React Frontend │ ────────────► │  FastAPI Backend │ ────────────────► │  PostgreSQL 16   │
 │   (Port 5173)   │               │   (Port 8000)    │                   │  + pgvector ext  │
-└─────────────────┘               └─────────────────┘                   └──────────────────┘
+│                 │ ◄──────────── │                  │                   └──────────────────┘
+│  useStockPrices │   WS push     │  /ws/prices      │
+│  (WS hook)      │   every 30s   │  (price stream)  │
+└─────────────────┘               └─────────────────┘
                                           │
                           ┌───────────────┼───────────────┐
                           ▼               ▼               ▼
