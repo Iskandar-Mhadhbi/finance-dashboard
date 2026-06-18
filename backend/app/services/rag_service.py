@@ -1,7 +1,6 @@
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-#from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_postgres.vectorstores import PGVector
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
@@ -151,16 +150,16 @@ async def answer_question(symbol: str, question: str) -> str:
     context = "\n\n".join([doc.page_content for doc in relevant_docs])
 
     prompt = ChatPromptTemplate.from_template("""
-You are a financial analyst assistant. Answer the user's question based only on the news context provided below.
-Be concise, factual, and cite the source where relevant.
+        You are a financial analyst assistant. Answer the user's question based only on the news context provided below.
+        Be concise, factual, and cite the source where relevant.
 
-Context:
-{context}
+        Context:
+        {context}
 
-Question: {question}
+        Question: {question}
 
-Answer:
-""")
+        Answer:
+        """)
 
     chain = prompt | llm | StrOutputParser()
     return chain.invoke({"context": context, "question": question})
