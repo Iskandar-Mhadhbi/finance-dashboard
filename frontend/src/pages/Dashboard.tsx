@@ -7,12 +7,12 @@ import { DashboardHeader } from '../components/DashboardHeader';
 import { WatchlistItemCard } from '../components/WatchlistItemCard';
 import { AddStockForm } from '../components/AddStockForm';
 import { StockChart } from '../components/StockChart';
+import { useStockPrices } from '../hooks/useStockPrices';
 
 export function Dashboard() {
   const queryClient = useQueryClient();
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
-  // Fetch watchlist
   const { data: watchlist = [], isLoading } = useQuery({
     queryKey: ['watchlist'],
     queryFn: watchlistApi.getWatchlist,
@@ -24,7 +24,6 @@ export function Dashboard() {
     },
   });
 
-  // Fetch all quotes in parallel
   const { data: quotes = {} } = useQuery({
     queryKey: ['quotes', watchlist.map((i) => i.symbol)],
     queryFn: async () => {
@@ -41,10 +40,9 @@ export function Dashboard() {
       return result;
     },
     enabled: watchlist.length > 0,
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
   });
 
-  // Remove mutation
   const removeMutation = useMutation({
     mutationFn: watchlistApi.removeFromWatchlist,
     onSuccess: (_, removedId) => {
@@ -57,6 +55,16 @@ export function Dashboard() {
     },
   });
 
+  const { prices: livePrices, connected } = useStockPrices(true);
+
+  const mergeQuote = (symbol: string) => {
+    const base = quotes[symbol];
+    const live = livePrices[symbol];
+    if (!base) return undefined;
+    if (!live) return base;
+    return { ...base, ...live };
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-r from-[var(--bg-secondary)] via-[var(--accent)]/10 to-[var(--bg-primary)] transition-colors duration-200">
       <DashboardHeader />
@@ -65,14 +73,29 @@ export function Dashboard() {
 
         <div className="md:col-span-1 space-y-6">
           <div>
-            <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Watchlist</h2>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+              Watchlist
+            </h2>
+
+            {/* Live connection indicator */}
+            <div className="flex items-center gap-2 mb-6">
+              <div className={`w-2 h-2 rounded-full transition-colors duration-500 ${connected ? 'bg-green-500' : 'bg-slate-300'}`} />
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {connected ? 'Live prices active' : 'Connecting...'}
+              </span>
+            </div>
+
             <AddStockForm onAddSuccess={() => void queryClient.invalidateQueries({ queryKey: ['watchlist'] })} />
           </div>
 
-          {isLoading && <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>}
+          {isLoading && (
+            <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
+          )}
 
           {!isLoading && watchlist.length === 0 && (
-            <p style={{ color: 'var(--text-secondary)' }}>Your watchlist is empty. Add a stock symbol above.</p>
+            <p style={{ color: 'var(--text-secondary)' }}>
+              Your watchlist is empty. Add a stock symbol above.
+            </p>
           )}
 
           {!isLoading && watchlist.length > 0 && (
@@ -85,13 +108,16 @@ export function Dashboard() {
                     onClick={() => setSelectedSymbol(item.symbol)}
                     className={`block rounded-xl cursor-pointer transition-all duration-200 transform ${
                       isActive
-                        ? 'ring-2 ring-blue-500 bg-white shadow-md scale-[1.01]'
-                        : 'hover:bg-white/60 hover:shadow-sm bg-white/40'
+                        ? 'ring-2 ring-blue-500 shadow-md scale-[1.01]'
+                        : 'hover:shadow-sm'
                     }`}
+                    style={{
+                      backgroundColor: isActive ? 'var(--bg-card)' : 'var(--bg-secondary)',
+                    }}
                   >
                     <WatchlistItemCard
                       item={item}
-                      quote={quotes[item.symbol]}
+                      quote={mergeQuote(item.symbol)}
                       onRemove={(id) => removeMutation.mutate(id)}
                     />
                   </li>
@@ -103,17 +129,41 @@ export function Dashboard() {
 
         <div className="md:col-span-2">
           {selectedSymbol ? (
-            <div className="p-6 rounded-xl shadow-sm sticky top-8 transition-colors duration-200" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', border: '1px solid var(--border)' }}>
+            <div
+              className="p-6 rounded-xl shadow-sm sticky top-8 transition-colors duration-200"
+              style={{
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+              }}
+            >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold">
                   <span style={{ color: 'var(--text-primary)' }}>Performance History: </span>
                   <span style={{ color: 'var(--accent)' }}>{selectedSymbol}</span>
                 </h3>
+                {livePrices[selectedSymbol] && (
+                  <div className="text-right">
+                    <div className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                      ${livePrices[selectedSymbol].price.toFixed(2)}
+                    </div>
+                    <div className={`text-sm font-medium ${livePrices[selectedSymbol].change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {livePrices[selectedSymbol].change >= 0 ? '+' : ''}
+                      {livePrices[selectedSymbol].change.toFixed(2)} ({livePrices[selectedSymbol].change_percent.toFixed(2)}%)
+                    </div>
+                  </div>
+                )}
               </div>
               <StockChart symbol={selectedSymbol} />
             </div>
           ) : (
-            <div className="h-72 flex items-center justify-center border-2 border-dashed rounded-xl transition-colors duration-200" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+            <div
+              className="h-72 flex items-center justify-center border-2 border-dashed rounded-xl transition-colors duration-200"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--border)',
+                color: 'var(--text-muted)',
+              }}
+            >
               Select a stock from your watchlist to view its data trends.
             </div>
           )}
