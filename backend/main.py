@@ -8,7 +8,7 @@ app = FastAPI(title="Finance Dashboard API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url],
+    allow_origins=[settings.frontend_url, settings.frontend_url_prod],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -18,7 +18,8 @@ class Settings(BaseSettings):
 
     # App
     app_env: str = "development"
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str 
+    frontend_url_prod: str  
 
     # AI
     groq_api_key: str

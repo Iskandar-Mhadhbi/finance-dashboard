@@ -30,6 +30,16 @@ async def add_to_watchlist(
             detail=f"{data.symbol.upper()} is already in your watchlist",
         )
 
+    # Validate symbol exists before adding
+    import yfinance as yf
+    ticker = yf.Ticker(data.symbol.upper())
+    info = ticker.fast_info
+    if not info or not getattr(info, "last_price", None):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"{data.symbol.upper()} is not a valid stock symbol",
+        )
+
     item = WatchlistItem(
         user_id=user_id,
         symbol=data.symbol.upper(),
@@ -39,7 +49,6 @@ async def add_to_watchlist(
     await db.commit()
     await db.refresh(item)
     return item
-
 
 async def remove_from_watchlist(
     db: AsyncSession, user_id: uuid.UUID, item_id: uuid.UUID
