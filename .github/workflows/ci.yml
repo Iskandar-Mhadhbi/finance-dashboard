@@ -58,8 +58,8 @@ jobs:
           FRONTEND_URL: http://localhost:5173
           FRONTEND_URL_DOCKER: http://localhost
         run: |
-          python -m pytest tests/ -v --tb=short --cov=app --cov-report=html --cov-report=term
-
+          python -m pytest tests/ -v --tb=short --cov=app --cov-report=html --cov-report=term --cov-fail-under=40
+          
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
