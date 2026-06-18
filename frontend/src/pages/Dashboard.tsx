@@ -58,21 +58,21 @@ export function Dashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-linear-to-r from-[var(--bg-secondary)] via-[var(--accent)]/10 to-[var(--bg-primary)] transition-colors duration-200">
       <DashboardHeader />
 
       <main className="max-w-6xl mx-auto px-8 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
 
         <div className="md:col-span-1 space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-6">Watchlist</h2>
+            <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Watchlist</h2>
             <AddStockForm onAddSuccess={() => void queryClient.invalidateQueries({ queryKey: ['watchlist'] })} />
           </div>
 
-          {isLoading && <p className="text-slate-500">Loading...</p>}
+          {isLoading && <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>}
 
           {!isLoading && watchlist.length === 0 && (
-            <p className="text-slate-500">Your watchlist is empty. Add a stock symbol above.</p>
+            <p style={{ color: 'var(--text-secondary)' }}>Your watchlist is empty. Add a stock symbol above.</p>
           )}
 
           {!isLoading && watchlist.length > 0 && (
@@ -103,16 +103,17 @@ export function Dashboard() {
 
         <div className="md:col-span-2">
           {selectedSymbol ? (
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 sticky top-8">
+            <div className="p-6 rounded-xl shadow-sm sticky top-8 transition-colors duration-200" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', border: '1px solid var(--border)' }}>
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-slate-800">
-                  Performance History: <span className="text-blue-600">{selectedSymbol}</span>
+                <h3 className="text-xl font-bold">
+                  <span style={{ color: 'var(--text-primary)' }}>Performance History: </span>
+                  <span style={{ color: 'var(--accent)' }}>{selectedSymbol}</span>
                 </h3>
               </div>
               <StockChart symbol={selectedSymbol} />
             </div>
           ) : (
-            <div className="h-72 flex items-center justify-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl text-slate-400">
+            <div className="h-72 flex items-center justify-center border-2 border-dashed rounded-xl transition-colors duration-200" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
               Select a stock from your watchlist to view its data trends.
             </div>
           )}

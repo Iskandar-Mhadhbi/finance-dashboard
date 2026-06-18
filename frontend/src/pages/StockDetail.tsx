@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import * as stocksApi from '../api/stocks';
 import * as ragApi from '../api/rag';
-import type { StockQuote } from '../api/stocks';
 import { StockChart } from '../components/StockChart';
 import { DashboardHeader } from '../components/DashboardHeader';
 
@@ -15,10 +15,19 @@ export function StockDetail() {
   const { symbol } = useParams<{ symbol: string }>();
   const navigate = useNavigate();
 
-  const [quote, setQuote] = useState<StockQuote | null>(null);
-  const [quoteLoading, setQuoteLoading] = useState(true);
-  const [quoteError, setQuoteError] = useState<string | null>(null);
+  // 1. REPLACED LOCAL STATE WITH TANSTACK QUERY
+  const { 
+    data: quote, 
+    isLoading: quoteLoading, 
+    error: quoteError 
+  } = useQuery({
+    queryKey: ['quote', symbol],
+    queryFn: () => stocksApi.getQuote(symbol!),
+    enabled: !!symbol, // Only fetch if symbol is present in the URL
+    staleTime: 30_000,  // Keep data fresh for 30 seconds
+  });
 
+  // Chat/RAG States (These are UI-driven, so simple useState is still perfect here)
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -27,22 +36,7 @@ export function StockDetail() {
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!symbol) return;
-    const loadQuote = async () => {
-      try {
-        setQuoteLoading(true);
-        const data = await stocksApi.getQuote(symbol);
-        setQuote(data);
-      } catch {
-        setQuoteError('Failed to load quote.');
-      } finally {
-        setQuoteLoading(false);
-      }
-    };
-    void loadQuote();
-  }, [symbol]);
-
+  // Keep chat scrolled to bottom on new messages
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -92,7 +86,7 @@ export function StockDetail() {
   const isPositive = quote && quote.change >= 0;
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-linear-to-r from-[var(--bg-secondary)] via-[var(--accent)]/10 to-[var(--bg-primary) ] transition-colors duration-200">
       <DashboardHeader />
 
       <main className="max-w-5xl mx-auto px-8 py-8 space-y-6">
@@ -100,67 +94,84 @@ export function StockDetail() {
         {/* Back button */}
         <button
           onClick={() => navigate('/dashboard')}
-          className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors"
+          className="text-sm flex items-center gap-1 transition-colors duration-200 bg-transparent border-0 cursor-pointer"
+          style={{ color: 'var(--text-muted)' }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
         >
           ← Back to Dashboard
         </button>
 
         {/* Quote Card */}
-        {quoteLoading && <p className="text-slate-500">Loading quote...</p>}
-        {quoteError && <p className="text-red-500">{quoteError}</p>}
+        {quoteLoading && <p style={{ color: 'var(--text-secondary)' }}>Loading quote...</p>}
+        {quoteError && <p className="text-red-500">Failed to load quote data.</p>}
+        
         {quote && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div 
+            className="rounded-xl shadow-sm p-6 transition-colors duration-200" 
+            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          >
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-slate-800">{quote.symbol}</h1>
-                <p className="text-slate-500 mt-1">{quote.name}</p>
+                <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>{quote.symbol}</h1>
+                <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>{quote.name}</p>
               </div>
               <div className="text-right">
-                <p className="text-4xl font-bold text-slate-800">
+                <p className="text-4xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   ${quote.price.toFixed(2)}
                 </p>
-                <p className={`text-sm font-medium mt-1 ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
+                <p className={`text-sm font-medium mt-1 ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
                   {isPositive ? '+' : ''}{quote.change.toFixed(2)} ({quote.change_percent.toFixed(2)}%)
                 </p>
               </div>
             </div>
-            <div className="mt-4 flex gap-6 text-sm text-slate-500">
-              <span>Prev. Close: <strong className="text-slate-700">${quote.previous_close.toFixed(2)}</strong></span>
-              <span>Currency: <strong className="text-slate-700">{quote.currency}</strong></span>
+            <div className="mt-4 flex gap-6 text-sm" style={{ color: 'var(--text-muted)' }}>
+              <span>Prev. Close: <strong style={{ color: 'var(--text-secondary)' }}>${quote.previous_close.toFixed(2)}</strong></span>
+              <span>Currency: <strong style={{ color: 'var(--text-secondary)' }}>{quote.currency}</strong></span>
             </div>
           </div>
         )}
 
         {/* Price Chart */}
         {symbol && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-800 mb-2">Price History</h2>
+          <div 
+            className="rounded-xl shadow-sm p-6 transition-colors duration-200" 
+            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}
+          >
+            <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Price History</h2>
             <StockChart symbol={symbol} />
           </div>
         )}
 
         {/* RAG Chat */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+        <div 
+          className="rounded-xl shadow-sm p-6 space-y-4 transition-colors duration-200" 
+          style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)' }}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-slate-800">AI News Assistant</h2>
-              <p className="text-sm text-slate-500 mt-0.5">
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>AI News Assistant</h2>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 Ask questions about {symbol} based on latest news
               </p>
             </div>
             <button
               onClick={handleFetchNews}
               disabled={fetchingNews}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-colors duration-200"
+              style={{ backgroundColor: 'var(--accent)' }}
             >
               {fetchingNews ? 'Fetching...' : newsIndexed ? '↺ Refresh News' : 'Fetch News'}
             </button>
           </div>
 
-          {/* Chat messages */}
-          <div className="h-72 overflow-y-auto space-y-3 border border-slate-100 rounded-lg p-4 bg-slate-50">
+          {/* Chat messages box */}
+          <div 
+            className="h-72 overflow-y-auto space-y-3 rounded-lg p-4 transition-colors duration-200" 
+            style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
+          >
             {messages.length === 0 && (
-              <p className="text-slate-400 text-sm text-center mt-24">
+              <p className="text-sm text-center mt-24" style={{ color: 'var(--text-muted)' }}>
                 Click "Fetch News" to load the latest articles, then ask a question.
               </p>
             )}
@@ -172,9 +183,14 @@ export function StockDetail() {
                 <div
                   className={`max-w-[80%] px-4 py-2 rounded-xl text-sm leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-none'
-                      : 'bg-white text-slate-700 border border-slate-200 rounded-bl-none shadow-sm'
+                      ? 'text-white rounded-br-none'
+                      : 'rounded-bl-none shadow-sm'
                   }`}
+                  style={
+                    msg.role === 'user'
+                      ? { backgroundColor: 'var(--accent)' }
+                      : { backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
+                  }
                 >
                   {msg.text}
                 </div>
@@ -182,7 +198,10 @@ export function StockDetail() {
             ))}
             {chatLoading && (
               <div className="flex justify-start">
-                <div className="bg-white border border-slate-200 rounded-xl rounded-bl-none px-4 py-2 text-sm text-slate-400 shadow-sm">
+                <div 
+                  className="rounded-xl rounded-bl-none px-4 py-2 text-sm shadow-sm"
+                  style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                >
                   Thinking...
                 </div>
               </div>
@@ -190,7 +209,7 @@ export function StockDetail() {
             <div ref={chatBottomRef} />
           </div>
 
-          {/* Input */}
+          {/* Input block */}
           <div className="flex gap-2">
             <input
               type="text"
@@ -199,12 +218,14 @@ export function StockDetail() {
               onKeyDown={(e) => e.key === 'Enter' && void handleAsk()}
               placeholder={`Ask something about ${symbol}...`}
               disabled={chatLoading}
-              className="flex-1 px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              className="flex-1 px-4 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200"
+              style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
             />
             <button
               onClick={() => void handleAsk()}
               disabled={chatLoading || !question.trim()}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 text-white text-sm font-medium rounded-lg disabled:opacity-50 transition-colors duration-200"
+              style={{ backgroundColor: 'var(--accent)' }}
             >
               Ask
             </button>
