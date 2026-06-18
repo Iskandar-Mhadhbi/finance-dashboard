@@ -113,3 +113,31 @@ jobs:
           tags: ghcr.io/${{ env.REPO_OWNER }}/finance-dashboard/frontend:latest
           build-args: |
             VITE_API_URL=http://localhost:8000/api
+            
+  scan-backend:
+    name: Scan Backend Image
+    runs-on: ubuntu-latest
+    needs: build-backend
+
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_OWNER }}/finance-dashboard/backend:latest
+          format: table
+          exit-code: '0'
+          severity: CRITICAL,HIGH
+
+  scan-frontend:
+    name: Scan Frontend Image
+    runs-on: ubuntu-latest
+    needs: build-frontend
+
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ env.REPO_OWNER }}/finance-dashboard/frontend:latest
+          format: table
+          exit-code: '0'
+          severity: CRITICAL,HIGH          
