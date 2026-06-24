@@ -185,7 +185,10 @@ cd backend
 python -m venv venv
 venv\Scripts\activate        # Windows
 pip install -r requirements.txt
-alembic upgrade head
+alembic upgrade 5065984fa4f0
+alembic upgrade ff4a3492c91a
+# (Start the app here once, then run the final step)
+alembic upgrade 6296bdb69a39
 uvicorn main:app --reload
 
 # Frontend (new terminal)
